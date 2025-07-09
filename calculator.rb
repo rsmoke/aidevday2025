@@ -28,16 +28,19 @@ class Calculator
     num1 * num2
   end
 
+  # Divides the first number by the second.
   def divide(num1, num2)
     raise ZeroDivisionError, 'Cannot divide by zero' if num2.zero?
 
     num1.to_f / num2
   end
 
+  # Calculates the power of a number.
   def power(base, exponent)
     base**exponent
   end
 
+  # Calculates the square root of a number.
   def square_root(num)
     raise ArgumentError, 'Cannot calculate the square root of a negative number' if num.negative?
 
@@ -45,75 +48,79 @@ class Calculator
   end
 end
 
-# Command-line interface
-def prompt(message)
-  print message
-  gets.chomp
-end
+# Handles the command-line interface for the calculator.
+class CalculatorApp
+  OPERATIONS = {
+    '1' => { name: 'Add', method: :add, num_args: 2 },
+    '2' => { name: 'Subtract', method: :subtract, num_args: 2 },
+    '3' => { name: 'Multiply', method: :multiply, num_args: 2 },
+    '4' => { name: 'Divide', method: :divide, num_args: 2 },
+    '5' => { name: 'Power', method: :power, num_args: 2 },
+    '6' => { name: 'Square Root', method: :square_root, num_args: 1 },
+    '7' => { name: 'Exit', method: :exit, num_args: 0 }
+  }.freeze
 
-def get_numbers(choice)
-  if %w[1 2 3 4 5].include?(choice)
-    [prompt('Enter first number: ').to_f, prompt('Enter second number: ').to_f]
-  elsif choice == '6'
-    [prompt('Enter a number: ').to_f]
-  else
-    []
+  def initialize
+    @calculator = Calculator.new
+  end
+
+  def run
+    loop do
+      display_menu
+      choice = prompt('Choose an option: ')
+      operation = OPERATIONS[choice]
+
+      break if choice == '7'
+
+      if operation
+        process_operation(operation)
+      else
+        puts 'Invalid option.'
+      end
+    end
+    puts 'Goodbye!'
+  end
+
+  private
+
+  def display_menu
+    puts "\nBasic Calculator"
+    OPERATIONS.each do |key, op|
+      puts "#{key}. #{op[:name]}"
+    end
+  end
+
+  def prompt(message)
+    print message
+    gets.chomp
+  end
+
+  def get_numbers(num_args)
+    numbers = []
+    num_args.times do |i|
+      loop do
+        num_str = prompt("Enter number #{i + 1}: ")
+        begin
+          numbers << Float(num_str)
+          break
+        rescue ArgumentError
+          puts 'Invalid number. Please enter a valid number.'
+        end
+      end
+    end
+    numbers
+  end
+
+  def process_operation(operation)
+    nums = get_numbers(operation[:num_args])
+    result = @calculator.public_send(operation[:method], *nums)
+    puts "Result: #{result}"
+  rescue ZeroDivisionError, ArgumentError => e
+    puts "Error: #{e.message}"
   end
 end
 
-def calculate(choice, nums, calc)
-  case choice
-  when '1' then calc.add(*nums)
-  when '2' then calc.subtract(*nums)
-  when '3' then calc.multiply(*nums)
-  when '4'
-    begin
-      calc.divide(*nums)
-    rescue ZeroDivisionError => e
-      puts e.message
-      nil
-    end
-  when '5' then calc.power(*nums)
-  when '6'
-    begin
-      calc.square_root(nums.first)
-    rescue ArgumentError => e
-      puts e.message
-      nil
-    end
-  end
+if __FILE__ == $PROGRAM_NAME
+  app = CalculatorApp.new
+  app.run
 end
-
-def menu
-  puts "\nBasic Calculator"
-  puts '1. Add'
-  puts '2. Subtract'
-  puts '3. Multiply'
-  puts '4. Divide'
-  puts '5. Power'
-  puts '6. Square Root'
-  puts '7. Exit'
-end
-
-def run_calculator
-  calc = Calculator.new
-
-  loop do
-    menu
-    choice = prompt('Choose an option: ')
-    break if choice == '7'
-
-    nums = get_numbers(choice)
-    if nums.empty?
-      puts 'Invalid option.'
-      next
-    end
-
-    result = calculate(choice, nums, calc)
-    puts "Result: #{result}" unless result.nil?
-  end
-
-  puts 'Goodbye!'
-end
-
-run_calculator if __FILE__ == $PROGRAM_NAME
