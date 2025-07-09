@@ -46,13 +46,10 @@ class Calculator
 end
 
 # Command-line interface
-
 def prompt(message)
   print message
   gets.chomp
 end
-
-calc = Calculator.new
 
 def get_numbers(choice)
   if %w[1 2 3 4 5].include?(choice)
@@ -98,19 +95,25 @@ def menu
   puts '7. Exit'
 end
 
-loop do
-  menu
-  choice = prompt('Choose an option: ')
-  break if choice == '7'
+def run_calculator
+  calc = Calculator.new
 
-  nums = get_numbers(choice)
-  if nums.empty?
-    puts 'Invalid option.'
-    next
+  loop do
+    menu
+    choice = prompt('Choose an option: ')
+    break if choice == '7'
+
+    nums = get_numbers(choice)
+    if nums.empty?
+      puts 'Invalid option.'
+      next
+    end
+
+    result = calculate(choice, nums, calc)
+    puts "Result: #{result}" unless result.nil?
   end
 
-  result = calculate(choice, nums, calc)
-  puts "Result: #{result}" unless result.nil?
+  puts 'Goodbye!'
 end
 
-puts 'Goodbye!'
+run_calculator if __FILE__ == $PROGRAM_NAME
